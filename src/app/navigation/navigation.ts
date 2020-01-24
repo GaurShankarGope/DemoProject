@@ -141,6 +141,25 @@ if (JSON.parse(localStorage.getItem('userRoleId')) != '7') {
     childrenArray.push(childrenArrayInfo);
 
     var childrenArrayInfo = {};
+    childrenArrayInfo["id"] = 'Invited Users';
+    childrenArrayInfo["title"] = 'Invited Users Management';
+    childrenArrayInfo["translate"] = 'NAV.CHARTERERMANAGEMENT';
+    childrenArrayInfo["type"] = 'item';
+    childrenArrayInfo["icon"] = 'email';
+    childrenArrayInfo["url"] = '/apps/invite';
+    childrenArray.push(childrenArrayInfo);
+
+    var childrenArrayInfo = {};
+    childrenArrayInfo["id"] = 'Ownership Transfered';
+    childrenArrayInfo["title"] = 'Ownership Transfered Management';
+    childrenArrayInfo["translate"] = 'NAV.CHARTERERMANAGEMENT';
+    childrenArrayInfo["type"] = 'item';
+    childrenArrayInfo["icon"] = 'transfer_within_a_station';
+    childrenArrayInfo["url"] = '/apps/ownership';
+    childrenArray.push(childrenArrayInfo);
+
+
+    var childrenArrayInfo = {};
     childrenArrayInfo["id"] = 'Messaging Board';
     childrenArrayInfo["title"] = 'Messaging Board';
     childrenArrayInfo["type"] = 'item';

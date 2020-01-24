@@ -887,4 +887,22 @@ tradeStatusData(req)
         {
             return this.http.post(`${config.baseUrl}/invitationEmailSendCompanyAdmin`,req)
         }
+        
+        changeOwnerShip(req)
+        {
+            return this.http.post(`${config.baseUrl}/changeOwnerShip`,req)
+        }
+
+        emailSendCommon(req)
+        {
+            return this.http.post(`${config.baseUrl}/emailSendCommon`,req)
+        }
+
+        ownerShipRecordsServerSide(req)
+        {
+            return this.http.post(`${config.baseUrl}/ownerShipRecordsServerSide`,req)
+        }
+
+
+        
 }

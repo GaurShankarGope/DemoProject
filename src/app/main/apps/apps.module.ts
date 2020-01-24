@@ -13,6 +13,7 @@ import { ChatManagementComponent } from './chat-management/chat-management.compo
 import { FaqManagementComponent } from './faq-management/faq-management.component';
 import { TermManagementComponent } from './term-management/term-management.component';
 import { InviteComponent } from './invite/invite.component';
+import { OwnershipComponent } from './ownership/ownership.component';
 // import { ChatComponent } from './chat/chat.component';
 
 // import { StdbidManagementComponent } from './stdbid-management/stdbid-management.component';
@@ -179,6 +180,10 @@ const routes = [
     {
         path: 'invite',
         loadChildren: './invite/invite.module#InviteManagementModule',
+    },
+    {
+        path: 'ownership',
+        loadChildren: './ownership/ownership.module#OwnershipManagementModule',
     },
 
 ];

@@ -63,6 +63,8 @@ export interface PeriodicElement {
 
     ownerNameInfo: string;
     approval: string;
+
+    ownershipChange : string;
 }
 
 @Component(
@@ -78,7 +80,7 @@ export class TradingPlatformManagementComponent implements OnInit {
 
 
     displayedColumns: string[] = ['identifier', 'cpDateInfo', 'brokerName', 'chartererName', 'ownerName', 'vesselName',
-        'progress', 'statusInfo', 'newAction']
+        'progress', 'statusInfo','newAction']
 
 
     dataSource = new MatTableDataSource<PeriodicElement>();
@@ -227,11 +229,21 @@ export class TradingPlatformManagementComponent implements OnInit {
     chartererIdValueForDrawRecords;
     drawCPIDForDrawRecords;
     updateMessageForNotification: string;
+
+
+    ownerShipChangeModal : any;
+
+    changeOwnerId : any;
+    changeOwnerName : any;
+    tradeIdentifier : any;
+    changeOwnerEmailID : any;
+
+
     // Assign API Variable End
     notification = [];
     // Datatable Settings Start
     tradingRecordsDisplayColumn: string[] = ['identifier', 'cpDateInfo', 'brokerName', 'chartererName', 'ownerName', 'vesselName',
-        'progress', 'statusInfo', 'isChartererAccepted', 'isOwnerAccepted', 'approvalStatus','action'];
+        'progress', 'statusInfo', 'isChartererAccepted', 'isOwnerAccepted', 'approvalStatus','ownershipChange','action'];
     tradingRecordsData = new MatTableDataSource<PeriodicElement>();
     applyFilter(filterValue: string) {
         this.tradingRecordsData.filter = filterValue.trim().toLowerCase();
@@ -328,14 +340,6 @@ export class TradingPlatformManagementComponent implements OnInit {
             this.isRecapView = true;
         }
 
-        if (JSON.parse(localStorage.getItem('userRoleId')) == '6') {
-            this.createTradeButtonView = true;
-            this.isBrokerView = 'Y';
-            this.isEditView = true;
-            this.isRecapView = true;
-        }
-        
-
         if (JSON.parse(localStorage.getItem('userRoleId')) == '4') {
             this.acceptRejectTitle = 'Participate / Boycott';
             this.afteracceptRejectTitle = 'BID';
@@ -357,6 +361,121 @@ export class TradingPlatformManagementComponent implements OnInit {
         this.ownerRecordsServerSide();
         this.tradingRecordsServerSide();
     }
+
+    changeOwnerShip(event,identifier,brokerId,chartererId,tradingId)
+    {
+        this.tradingId = tradingId;
+        this.brokerId = brokerId;
+        this.chartererId = chartererId;
+        this.tradeIdentifier = identifier;
+        this.changeOwnerName = event.target.options[event.target.options.selectedIndex].text;
+        this.changeOwnerId = event.target.value;
+        this.ownerShipChangeModal = !this.ownerShipChangeModal;
+    }
+
+    hideOwnerShipChangeModal(): void {
+        this.ownerShipChangeModal = !this.ownerShipChangeModal;
+    }
+
+    changeOwnerShipTrade()
+    {
+
+        var userName = localStorage.getItem('userName');
+        var emailID = localStorage.getItem('email');
+
+        for(let index = 0; index < this.ownerRecordsServerSideResponseData.length; index++)
+        {
+            if(this.ownerRecordsServerSideResponseData[index].id == this.changeOwnerId)
+            {
+                this.changeOwnerEmailID = this.ownerRecordsServerSideResponseData[index].email;
+            }
+        }
+
+        var message = userName + ' has transfer a ownership of trade - '+this.tradeIdentifier+' to '+ this.changeOwnerName;
+
+        var ownerShipData = {};
+            ownerShipData["tradingId"] = this.tradingId;
+            ownerShipData["companyId"] = localStorage.getItem('companyId');
+            ownerShipData["ownerId"] = localStorage.getItem('userId');
+            ownerShipData["changeOwnerId"] = this.changeOwnerId; 
+            ownerShipData["fromUserId"] = localStorage.getItem('userId');
+            ownerShipData["toUserId"] = this.changeOwnerId; 
+            ownerShipData["date"] = moment(new Date()).format("YYYY-MM-DD");
+            ownerShipData["time"] = moment().format("H:mm A");
+            ownerShipData["message"] = message;
+            ownerShipData["email_id"] = this.changeOwnerEmailID;
+            ownerShipData["createdBy"] = localStorage.getItem('userId');
+            ownerShipData["updatedBy"] = localStorage.getItem('userId');
+
+            console.log(ownerShipData);
+
+        try {
+            this._userService.changeOwnerShip(ownerShipData).pipe(first()).subscribe((res) => {
+                this.alertService.success('Ownership transfered successfully', 'Success');
+                this.ownerShipChangeModal = !this.ownerShipChangeModal;
+            }, err => { this.alertService.error(err, 'Error'); });
+        } catch (err) { }
+
+        var emailData = {};
+            emailData["email_id"] = emailID;
+            emailData["message"] = message;
+            emailData["subject"] = 'Ownership Transfered';
+        try {
+            this._userService.emailSendCommon(emailData).pipe(first()).subscribe((res) => {
+                
+            }, err => { this.alertService.error(err, 'Error'); });
+        } catch (err) { }
+
+        const header = new HttpHeaders();
+        header.append('Content-Type', 'application/json');
+        const headerOptions = { headers: header }
+        const tradingDataUpdate =
+        {
+            id: this.tradingId,
+            ownerId: this.changeOwnerId,
+            updatedBy: localStorage.getItem('userId')
+        };
+        this.http.post(`${config.baseUrl}/tradingDataUpdateCommon`, tradingDataUpdate, headerOptions).subscribe(res => { });
+
+        const tradingMessageData =
+        {
+            tradingId: this.tradingId,
+            message: message,
+            createdBy: localStorage.getItem('userId'),
+            updatedBy: localStorage.getItem('userId')
+        };
+        this.http.post(`${config.baseUrl}/tradingMessageInsert`,tradingMessageData, headerOptions).subscribe(res => { }, err => { });
+
+        const tradingNotificationData =
+        {
+            fromUserId: localStorage.getItem('userId'),
+            toUserId: this.brokerId,
+            notification: message,
+            createdBy: localStorage.getItem('userId'),
+            updatedBy: localStorage.getItem('userId')
+        };
+
+        this.socket.emit('new-notification', tradingNotificationData);
+
+        this.http.post(`${config.baseUrl}/tradingNotificationInsert`,tradingNotificationData, headerOptions).subscribe(res => { }, err => { });
+
+        const tradingNotificationDataCharterer =
+        {
+            fromUserId: localStorage.getItem('userId'),
+            toUserId: this.chartererId,
+            notification: message,
+            createdBy: localStorage.getItem('userId'),
+            updatedBy: localStorage.getItem('userId')
+        };
+
+        this.socket.emit('new-notification', tradingNotificationDataCharterer);
+
+        this.http.post(`${config.baseUrl}/tradingNotificationInsert`,tradingNotificationDataCharterer, headerOptions).subscribe(res => { }, err => { });
+
+        this.tradingRecordsServerSide();
+
+    }
+    
     get f() { return this.DrawManagementForm.controls; }
     get fDoc() { return this.DrawManagementFormForDocumentUser.controls; }
     get fSearch() { return this.DrawManagementSearchForm.controls; }
@@ -444,7 +563,7 @@ export class TradingPlatformManagementComponent implements OnInit {
                     this.tradingRecordsServerSideResponseData = this.tradingRecordsServerSideResponse.data;
                     console.log(this.tradingRecordsServerSideResponseData);
 
-                    setTimeout(() => { this.setPaginatorOfTradingRecordsDataTable(); }, 100);
+                    setTimeout(() => { this.setPaginatorOfTradingRecordsDataTable(); }, 2000);
                 }
             }, err => { this.alertService.error(err, 'Error'); });
         } catch (err) { }

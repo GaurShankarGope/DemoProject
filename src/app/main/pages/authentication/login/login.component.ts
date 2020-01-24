@@ -90,6 +90,13 @@ export class LoginComponent implements OnInit {
      * On init
      */
     ngOnInit(): void {
+
+        var isLogin = localStorage.getItem('userRoleId');
+        if(isLogin != '' && isLogin != null && isLogin != undefined)
+        {
+            this.router.navigate(['/apps/dashboards/analytics']);
+        }
+
         this.loginForm = this._formBuilder.group({
             username: ['', Validators.required],
             mobile: ['', [Validators.required, Validators.pattern('[6-9]\\d{9}')]],
@@ -135,7 +142,7 @@ export class LoginComponent implements OnInit {
                         
                         window.location.reload();
 
-                        this.router.navigate(['/apps/dashboards/analytics']);
+                        
 
 
                     } else {

@@ -130,7 +130,8 @@ export class InviteComponent implements OnInit
     // Invited User List Records Server Side Start
     invitedUserListRecordsServerSide(): void {
         var filter = {};
-            filter['companyId'] = JSON.parse(localStorage.getItem('companyId'));
+            filter['it.companyId'] = JSON.parse(localStorage.getItem('companyId'));
+            filter['it.createdBy'] = JSON.parse(localStorage.getItem('userId'));
         this._userService.invitedUserRecordsServerSide(filter).pipe(first())
         .subscribe(res =>{
             this.invitedUserListResponse = res;
